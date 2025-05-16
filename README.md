@@ -9,7 +9,7 @@
 ```typescript
 // src/lib/i18n/index.ts
 
-import { initI18n, setTranslations } from "svelte5-i18n";
+import { initI18n, setTranslations } from "@konemono/svelte5-i18n";
 
 const defaultLocale = "en";
 // 翻訳データを直接インポート（ビルド時に解決）
@@ -81,7 +81,7 @@ initI18n({
 
 ```svelte
 <script>
-import { t } from "svelte5-i18n";
+import { t } from "@konemono/svelte5-i18n";
 </script>
 <!-- 単純な翻訳 -->
 {$t("menu.add")} <!-- => "追加" または "Add" -->
@@ -99,7 +99,7 @@ import { t } from "svelte5-i18n";
 ```svelte
 <!-- src/lib/i18n/Trans.svelte -->
 <script lang="ts">
-  import { t } from "svelte5-i18n";
+  import { t } from "@konemono/svelte5-i18n";
 
   interface Props {
     key: string;
@@ -129,7 +129,7 @@ import { t } from "svelte5-i18n";
 
 ```svelte
 <script>
-  import { translate } from "svelte5-i18n";
+  import { translate } from "@konemono/svelte5-i18n";
 </script>
 
 <h1 use:translate={{ key: 'common.title' }}>タイトル</h1>
@@ -141,7 +141,7 @@ import { t } from "svelte5-i18n";
 ## 3. 言語の切り替え
 
 ```ts
-import { setLocale } from "svelte5-i18n";
+import { setLocale } from "@konemono/svelte5-i18n";
 
 // 言語を英語に切り替える
 setLocale("en");
