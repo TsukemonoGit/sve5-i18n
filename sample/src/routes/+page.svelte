@@ -7,9 +7,6 @@
   console.log("typeof t:", typeof t);
   let name = $state("ユーザー");
 
-  // Svelte 5の$derived機能を使用した翻訳
-  const welcomeMessage = $derived(t($locale, "common.welcome", { name: name }));
-
   // 名前変更ハンドラー
   function handleNameChange(e: Event) {
     name = (e.target as HTMLInputElement).value;
@@ -20,7 +17,7 @@
   <h1>Svelte 5 i18n デモ</h1>
 
   <div class="welcome-section">
-    <p>{welcomeMessage}</p>
+    <p>{t($locale, "common.welcome", { name: name })}</p>
     <input
       type="text"
       value={name}

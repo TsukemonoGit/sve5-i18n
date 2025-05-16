@@ -74,10 +74,9 @@ export function t(
   key: string,
   params?: Record<string, string>
 ): string {
-  const currentLocale = get(locale);
   const allTranslations = get(translations);
 
-  const localeTranslations = allTranslations[currentLocale] || {};
+  const localeTranslations = allTranslations[get(locale)] || {};
 
   // キーを分解して階層的に取得
   const keys = key.split(".");

@@ -7,4 +7,6 @@
   export let params: Record<string, string> = {};
 </script>
 
-{t($locale, key, params)}
+{#if locale}
+  {t($locale, key, params)}
+{/if}
