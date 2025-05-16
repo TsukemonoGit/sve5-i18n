@@ -1,6 +1,6 @@
 <!-- src/lib/i18n/Trans.svelte -->
 <script lang="ts">
-  import { locale, t } from "svelte5-i18n";
+  import { t } from "svelte5-i18n";
 
   // プロパティ定義
   interface Props {
@@ -10,4 +10,4 @@
   let { key = "", params = {} }: Props = $props();
 </script>
 
-{t($locale, key, params)}
+{$t(key, params)}

@@ -1,5 +1,6 @@
 // src/lib/i18n/index.ts
-import { get, writable } from "svelte/store";
+import { onMount } from "svelte";
+import { derived, get, writable } from "svelte/store";
 
 // タイプ定義
 type TranslationRecord = {
@@ -50,7 +51,7 @@ export async function initI18n(options: I18nOptions = {}): Promise<void> {
     // サーバーサイドの場合はデフォルト言語を使用
     locale.set(opts.defaultLocale as string);
   }
-  /* 
+  /*
   const currentLocale = get(locale);
 
   // 最初の言語ファイル読み込みをPromiseとして保持
@@ -69,14 +70,13 @@ export async function initI18n(options: I18nOptions = {}): Promise<void> {
 }
 
 // 翻訳を取得する関数
-export function t(
-  _locale: string,
+function getTranslate(
+  locale: string,
+  translations: Translations,
   key: string,
   params?: Record<string, string>
 ): string {
-  const allTranslations = get(translations);
-
-  const localeTranslations = allTranslations[get(locale)] || {};
+  const localeTranslations = translations[locale] || {};
 
   // キーを分解して階層的に取得
   const keys = key.split(".");
@@ -106,6 +106,14 @@ export function t(
   return result;
 }
 
+export const t = derived(
+  [locale, translations],
+  ([$locale, $translations]) =>
+    (key: string, params?: Record<string, string>) => {
+      return getTranslate($locale, $translations, key, params);
+    }
+);
+
 // 言語を切り替える関数
 export function setLocale(newLocale: LocaleCode): void {
   locale.set(newLocale);
@@ -126,7 +134,12 @@ export function translate(
   options: { key: string; params?: Record<string, string> }
 ) {
   const updateText = () => {
-    node.textContent = t(get(locale), options.key, options.params);
+    node.textContent = getTranslate(
+      get(locale),
+      get(translations),
+      options.key,
+      options.params
+    );
   };
 
   // 初期テキスト設定
@@ -147,15 +160,18 @@ export function translate(
 }
 
 // HTMLタイトル用の翻訳関数
-export const setTitle =
-  typeof document === "undefined"
-    ? () => {}
-    : (key: string, params?: Record<string, string>) => {
-        const updateTitle = () => {
-          document.title = t(get(locale), key, params);
-        };
-        updateTitle();
-        if (typeof window !== "undefined") {
-          locale.subscribe(() => updateTitle());
-        }
-      };
+export const setTitle = (key: string, params?: Record<string, string>) => {
+  if (!globalThis.document) {
+    return;
+  }
+
+  onMount(() => {
+    const unsubscribe = t.subscribe(($t) => {
+      if (globalThis.document) {
+        document.title = $t(key, params);
+      }
+    });
+
+    return unsubscribe;
+  });
+};

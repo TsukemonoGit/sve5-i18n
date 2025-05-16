@@ -1,20 +1,10 @@
 <script lang="ts">
   import LocaleSwitcher from "$lib/components/LocaleSwitcher.svelte";
-  import { onMount } from "svelte";
 
-  import { setTitle } from "svelte5-i18n";
   import "$lib/i18n/index.ts";
+  import { setTitle } from "svelte5-i18n";
 
-  onMount(async () => {
-    /* await initI18n({
-      defaultLocale: "ja",
-      supportedLocales: ["ja", "en"],
-      loadPath: "/langs/{locale}.json",
-    }); */
-
-    // ページタイトルの設定
-    setTitle("common.title");
-  });
+  setTitle("common.title");
 </script>
 
 <header>
