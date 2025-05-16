@@ -1,0 +1,17 @@
+{
+  "menu": {
+    "add": "Add",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "common": {
+    "welcome": "Welcome, {name}!",
+    "title": "Svelte 5 i18n Demo"
+  },
+  "dashboard": {
+    "items": "Number of items",
+    "status": "Status",
+    "lastUpdate": "Last update"
+  }
+}

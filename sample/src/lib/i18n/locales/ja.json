@@ -1,0 +1,17 @@
+{
+  "menu": {
+    "add": "追加",
+    "delete": "削除",
+    "save": "保存",
+    "cancel": "キャンセル"
+  },
+  "common": {
+    "welcome": "ようこそ、{name}さん！",
+    "title": "Svelte 5 i18nデモ"
+  },
+  "dashboard": {
+    "items": "アイテム数",
+    "status": "ステータス",
+    "lastUpdate": "最終更新"
+  }
+}

@@ -1,0 +1,138 @@
+# 使い方の説明
+
+この i18n ライブラリは、Svelte 5 の新しいリアクティビティシステム（シグナル、エフェクト、派生値）を活用して実装されています。以下にライブラリの使い方を説明します。
+
+---
+
+## 1. 初期設定
+
+アプリケーションの起動時に `initI18n` 関数を呼び出して初期化します：
+
+```typescript
+// src/lib/i18n/index.ts
+
+import { initI18n, setTranslations } from "svelte5-i18n";
+
+const defaultLocale = "en";
+// 翻訳データを直接インポート（ビルド時に解決）
+import ja from "./locales/ja.json";
+import en from "./locales/en.json";
+
+setTranslations({
+  ja,
+  en,
+});
+
+initI18n({
+  defaultLocale: defaultLocale,
+  supportedLocales: ["ja", "en"],
+  loadPath: "/i18n/locales/{locale}.json",
+});
+```
+
+```svelte
+<!-- +layout.svelte または他の初期化ファイル内 -->
+<script lang="ts">
+  import "$lib/i18n/index.ts";
+</script>
+```
+
+---
+
+## 2. 翻訳の使用方法
+
+### 方法 1: `t` 関数を使用
+
+```ts
+import { t } from "$lib/i18n";
+
+// 単純な翻訳
+const message = t("menu.add"); // => "追加" または "Add"
+
+// パラメータ付き翻訳
+const welcome = t("common.welcome", { name: "ジョン" }); // => "ようこそ、ジョンさん！" または "Welcome, John!"
+```
+
+---
+
+### 方法 2: `Trans` コンポーネントを使用
+
+```svelte
+<script>
+  import Trans from '$lib/i18n/Trans.svelte';
+</script>
+
+<Trans key="menu.add" />
+<Trans key="common.welcome" params={{ name: 'ジョン' }} />
+```
+
+---
+
+### 方法 3: `translate` ディレクティブを使用
+
+```svelte
+<script>
+  import { translate } from '$lib/i18n/directives';
+</script>
+
+<h1 use:translate={{ key: 'common.title' }}>タイトル</h1>
+<p use:translate={{ key: 'common.welcome', params: { name: 'ジョン' } }}>ようこそ</p>
+```
+
+---
+
+## 3. 言語の切り替え
+
+```ts
+import { setLocale } from "$lib/i18n";
+
+// 言語を英語に切り替える
+setLocale("en");
+```
+
+または、`LocaleSwitcher` コンポーネントを使用：
+
+```svelte
+<script>
+  import LocaleSwitcher from '$lib/i18n/LocaleSwitcher.svelte';
+</script>
+
+<LocaleSwitcher locales={['ja', 'en']} labels={{ ja: '日本語', en: 'English' }} />
+```
+
+---
+
+## 4. ページタイトルの翻訳
+
+```ts
+import { setTitle } from "$lib/i18n/directives";
+
+// ページタイトルを設定
+setTitle("common.title");
+```
+
+---
+
+## ライブラリの特徴
+
+- **Svelte 5 の新機能を活用**：シグナル、エフェクト、派生値を使用して最適化されています
+- **URL が変わらないタイプ**：言語切り替えで URL が変更されません
+- **軽量で柔軟**：必要な機能に集中し、不要な依存関係がありません
+- **ローカルストレージ対応**：ユーザーの言語設定を保存します
+- **ブラウザのデフォルト言語検出**：初回訪問時にブラウザの言語設定を検出します
+- **階層的な翻訳キー**：`menu.add` のような階層構造をサポートします
+- **パラメータ置換**：`{name}` のようなプレースホルダーをサポートします
+- **フォールバック言語**：翻訳が見つからない場合のフォールバックが設定可能です
+- **SSR サポート**：サーバーサイドレンダリングに対応しています
+
+---
+
+## ライブラリの拡張
+
+このライブラリは基本機能を提供していますが、以下のような機能を追加することで拡張できます：
+
+- 複数形対応：one, few, many などの複数形ルールをサポート
+- 日付や数値のフォーマット：言語に応じた日付や数値のフォーマット
+- キャッシュ機能：パフォーマンス向上のための翻訳キャッシュ
+- 翻訳の自動検出：不足している翻訳キーを検出するツール
+- 言語ごとのフォント切り替え：言語に応じたフォント設定
