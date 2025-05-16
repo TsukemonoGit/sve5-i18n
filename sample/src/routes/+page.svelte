@@ -1,7 +1,7 @@
 <!-- src/routes/+page.svelte -->
 <script lang="ts">
-  import { locale, t } from "svelte5-i18n";
   import Trans from "$lib/components/Trans.svelte";
+  import { t } from "svelte5-i18n";
 
   import { translate } from "svelte5-i18n";
   console.log("typeof t:", typeof t);
@@ -17,7 +17,7 @@
   <h1>Svelte 5 i18n デモ</h1>
 
   <div class="welcome-section">
-    <p>{t($locale, "common.welcome", { name: name })}</p>
+    <p>{$t("common.welcome", { name: name })}</p>
     <input
       type="text"
       value={name}
