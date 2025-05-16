@@ -3,8 +3,11 @@
   import { locale, t } from "svelte5-i18n";
 
   // プロパティ定義
-  export let key = "";
-  export let params: Record<string, string> = {};
+  interface Props {
+    key: string;
+    params?: Record<string, string>;
+  }
+  let { key = "", params = {} }: Props = $props();
 </script>
 
 {t($locale, key, params)}
