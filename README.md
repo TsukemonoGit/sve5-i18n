@@ -1,8 +1,6 @@
 # 使い方の説明
 
-この i18n ライブラリは、Svelte 5 の新しいリアクティビティシステム（シグナル、エフェクト、派生値）を活用して実装されています。以下にライブラリの使い方を説明します。
-
----
+## svelte5 の i18n
 
 ## 1. 初期設定
 
@@ -39,23 +37,82 @@ initI18n({
 
 ---
 
-## 2. 翻訳の使用方法
+## 2. 翻訳ファイルの構造
+
+翻訳ファイルは以下のような JSON 形式で作成します：
+
+```json
+// src/lib/i18n/locales/ja.json
+{
+  "common": {
+    "title": "アプリケーションタイトル",
+    "welcome": "ようこそ、{name}さん！",
+    "language": "言語"
+  },
+  "menu": {
+    "home": "ホーム",
+    "about": "紹介",
+    "contact": "お問い合わせ",
+    "add": "追加"
+  }
+}
+```
+
+```json
+// src/lib/i18n/locales/en.json
+{
+  "common": {
+    "title": "Application Title",
+    "welcome": "Welcome, {name}!",
+    "language": "Language"
+  },
+  "menu": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "add": "Add"
+  }
+}
+```
+
+## 3. 翻訳の使用方法
 
 ### 方法 1: `t` 関数を使用
 
-```ts
-import { t } from "$lib/i18n";
+```svelte
+<script>
+import { t } from "svelte5-i18n";
+</script>
+<!-- 単純な翻訳 -->
+{$t("menu.add")} <!-- => "追加" または "Add" -->
 
-// 単純な翻訳
-const message = t("menu.add"); // => "追加" または "Add"
-
-// パラメータ付き翻訳
-const welcome = t("common.welcome", { name: "ジョン" }); // => "ようこそ、ジョンさん！" または "Welcome, John!"
+<!-- パラメータ付き翻訳 -->
+{$t("common.welcome", { name: "ジョン" })} <!-- => "ようこそ、ジョンさん！" または "Welcome, John!" -->
 ```
 
 ---
 
 ### 方法 2: `Trans` コンポーネントを使用
+
+まず、`Trans.svelte` コンポーネントを作成します：
+
+```svelte
+<!-- src/lib/i18n/Trans.svelte -->
+<script lang="ts">
+  import { t } from "svelte5-i18n";
+
+  interface Props {
+    key: string;
+    params?: Record<string, string>;
+  }
+  let { key = "", params = {} }: Props = $props();
+</script>
+
+{$t(key, params)}
+
+```
+
+そして、以下のように使用します：
 
 ```svelte
 <script>
@@ -72,7 +129,7 @@ const welcome = t("common.welcome", { name: "ジョン" }); // => "ようこそ�
 
 ```svelte
 <script>
-  import { translate } from '$lib/i18n/directives';
+  import { translate } from "svelte5-i18n";
 </script>
 
 <h1 use:translate={{ key: 'common.title' }}>タイトル</h1>
@@ -84,20 +141,36 @@ const welcome = t("common.welcome", { name: "ジョン" }); // => "ようこそ�
 ## 3. 言語の切り替え
 
 ```ts
-import { setLocale } from "$lib/i18n";
+import { setLocale } from "svelte5-i18n";
 
 // 言語を英語に切り替える
 setLocale("en");
 ```
 
-または、`LocaleSwitcher` コンポーネントを使用：
+また、言語切り替え用のコンポーネントを作成することもできます：
 
 ```svelte
-<script>
-  import LocaleSwitcher from '$lib/i18n/LocaleSwitcher.svelte';
+<!-- src/lib/i18n/LocaleSwitcher.svelte -->
+<script lang="ts">
+  import { getLocale, setLocale } from "$lib/i18n";
+
+  export let locales: string[] = ["ja", "en"];
+  export let labels: Record<string, string> = { ja: "日本語", en: "English" };
+
+  let currentLocale = getLocale();
+
+  function handleChange(e: Event) {
+    const target = e.target as HTMLSelectElement;
+    setLocale(target.value);
+    currentLocale = target.value;
+  }
 </script>
 
-<LocaleSwitcher locales={['ja', 'en']} labels={{ ja: '日本語', en: 'English' }} />
+<select value={currentLocale} on:change={handleChange}>
+  {#each locales as locale}
+    <option value={locale}>{labels[locale]}</option>
+  {/each}
+</select>
 ```
 
 ---

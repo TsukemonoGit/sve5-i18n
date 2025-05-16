@@ -1,9 +1,12 @@
 {
-  "name": "svelte5-i18n",
+  "name": "@konemono/svelte5-i18n",
   "version": "0.1.0",
   "description": "Internationalization (i18n) library for Svelte 5",
-  "author": "Your Name",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TsukemonoGit/sve5-i18n.git"
+  },
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",

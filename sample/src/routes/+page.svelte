@@ -14,7 +14,7 @@
 </script>
 
 <div class="container">
-  <h1>Svelte 5 i18n デモ</h1>
+  <h1>Svelte 5 i18n Demo</h1>
 
   <div class="welcome-section">
     <p>{$t("common.welcome", { name: name })}</p>
@@ -47,7 +47,9 @@
 
   <div class="info-section">
     <p>
-      <strong use:translate={{ key: "dashboard.items" }}>アイテム数</strong>: 42
+      <strong use:translate={{ key: "dashboard.items.items" }}
+        >アイテム数</strong
+      >: 42
     </p>
     <p>
       <strong use:translate={{ key: "dashboard.lastUpdate" }}>最終更新</strong>:

@@ -10,7 +10,7 @@
     "title": "Svelte 5 i18nデモ"
   },
   "dashboard": {
-    "items": "アイテム数",
+    "items": { "items": "アイテム数" },
     "status": "ステータス",
     "lastUpdate": "最終更新"
   }

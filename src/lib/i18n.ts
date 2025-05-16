@@ -124,7 +124,7 @@ export function getLocale(): LocaleCode {
   return get(locale);
 }
 
-// 翻訳データを直接設定する関数（テスト用）
+// 翻訳データを直接設定する関数
 export function setTranslations(newTranslations: Translations): void {
   translations.set(newTranslations);
 }

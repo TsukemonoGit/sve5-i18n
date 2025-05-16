@@ -10,7 +10,7 @@
     "title": "Svelte 5 i18n Demo"
   },
   "dashboard": {
-    "items": "Number of items",
+    "items": { "items": "Number of items" },
     "status": "Status",
     "lastUpdate": "Last update"
   }
