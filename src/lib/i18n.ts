@@ -1,4 +1,5 @@
 // src/lib/i18n/index.ts
+import { onMount } from "svelte";
 import { derived, get, writable } from "svelte/store";
 
 // タイプ定義
@@ -159,20 +160,18 @@ export function translate(
 }
 
 // HTMLタイトル用の翻訳関数
-export const setTitle =
-  typeof document === "undefined"
-    ? () => {}
-    : (key: string, params?: Record<string, string>) => {
-        const updateTitle = () => {
-          document.title = getTranslate(
-            get(locale),
-            get(translations),
-            key,
-            params
-          );
-        };
-        updateTitle();
-        if (typeof window !== "undefined") {
-          locale.subscribe(() => updateTitle());
-        }
-      };
+export const setTitle = (key: string, params?: Record<string, string>) => {
+  if (!globalThis.document) {
+    return;
+  }
+
+  onMount(() => {
+    const unsubscribe = t.subscribe(($t) => {
+      if (globalThis.document) {
+        document.title = $t(key, params);
+      }
+    });
+
+    return unsubscribe;
+  });
+};
