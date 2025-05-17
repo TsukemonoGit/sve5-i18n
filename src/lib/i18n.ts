@@ -32,7 +32,7 @@ const defaultOptions: I18nOptions = {
   defaultLocale: "ja",
   supportedLocales: ["ja", "en"],
   loadPath: "/i18n/locales/{locale}.json",
-  fallbackLocale: undefined, // 明示的に undefined に設定
+  fallbackLocale: undefined,
   debug: false,
   missingTranslationWarnings: false,
 };

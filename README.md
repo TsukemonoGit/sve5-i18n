@@ -184,6 +184,134 @@ import { setTitle } from "$lib/i18n/directives";
 setTitle("common.title");
 ```
 
+## API リファレンス
+
+### ストア
+
+- **locale**  
+  現在のロケール（言語コード）を保持する Svelte の derived ストア（`Readable<string>`）。
+
+  ```typescript
+  export const locale: Readable<string>;
+  ```
+
+  - 現在選択されている言語コード（例: `"ja"` や `"en"`）を購読できます。
+
+- **translations**  
+  全ロケール分の翻訳データを保持する Svelte の writable ストア。
+  ```typescript
+  export const translations: Writable<Translations>;
+  ```
+  - 各言語の翻訳 JSON を格納します。
+
+---
+
+### 初期化・設定
+
+- **initI18n(options?: I18nOptions): Promise<void>**  
+  i18n システムを初期化します。  
+  オプションでデフォルト言語や対応言語、翻訳ファイルのパスなどを指定できます。
+
+  ```typescript
+  export async function initI18n(options?: I18nOptions): Promise<void>;
+  ```
+
+  - ブラウザの言語や localStorage から初期ロケールを決定します。
+
+- **setLocale(newLocale: string): void**  
+  ロケール（言語）を手動で切り替えます。
+
+  ```typescript
+  export function setLocale(newLocale: string): void;
+  ```
+
+- **setTranslations(newTranslations: Translations): void**  
+  翻訳データを直接セットします（テストや動的変更用）。
+
+  ```typescript
+  export function setTranslations(newTranslations: Translations): void;
+  ```
+
+- **getI18nOptions(): I18nOptions**  
+  現在の i18n オプションを取得します。
+  ```typescript
+  export function getI18nOptions(): I18nOptions;
+  ```
+
+---
+
+### 翻訳取得
+
+- **t**  
+  現在のロケール・翻訳データに基づき、翻訳関数を返す Svelte の derived ストアです。
+  ```typescript
+  export const t: Readable<
+    (key: string, params?: Record<string, string>) => string
+  >;
+  ```
+  - 使い方例: `{$t("greeting.hello", { name: "ユーザー" })}`
+  - フォールバックやパラメータ置換、デバッグ出力にも対応。
+
+---
+
+### Svelte アクション
+
+- **translate**  
+  HTML 要素に翻訳を自動適用する Svelte アクションです。
+  ```typescript
+  export function translate(
+    node: HTMLElement,
+    options: { key: string; params?: Record<string, string> }
+  ): {
+    update(newOptions: { key: string; params?: Record<string, string> }): void;
+    destroy(): void;
+  };
+  ```
+  - `node.textContent` に翻訳結果を自動でセットします。
+  - `locale` が変わるたびに自動で再翻訳されます。
+  - `update` で翻訳キーやパラメータを動的に変更できます。
+  - `destroy` で購読解除します。
+  - 例:
+    ```svelte
+    <h1 use:translate={{ key: "greeting.hello", params: { name } }} />
+    ```
+
+---
+
+### その他
+
+- **setTitle(key: string, params?: Record<string, string>): void**  
+  ドキュメントタイトルを翻訳して自動更新します（クライアントのみ）。
+  ```typescript
+  export const setTitle: (key: string, params?: Record<string, string>) => void;
+  ```
+  - 言語切り替え時も自動でタイトルが更新されます。
+
+---
+
+### 型定義
+
+- **I18nOptions**  
+  初期化や設定に使うオプション型。
+
+  ```typescript
+  interface I18nOptions {
+    defaultLocale?: string;
+    supportedLocales?: string[];
+    loadPath?: string;
+    fallbackLocale?: string;
+    debug?: boolean;
+    missingTranslationWarnings?: boolean;
+  }
+  ```
+
+- **Translations**  
+  翻訳データの型。
+  ```typescript
+  type Translations = Record<string, TranslationRecord>;
+  type TranslationRecord = { [key: string]: string | TranslationRecord };
+  ```
+
 ---
 
 ## ライブラリの特徴
@@ -199,13 +327,3 @@ setTitle("common.title");
 - **SSR サポート**：サーバーサイドレンダリングに対応しています
 
 ---
-
-## ライブラリの拡張
-
-このライブラリは基本機能を提供していますが、以下のような機能を追加することで拡張できます：
-
-- 複数形対応：one, few, many などの複数形ルールをサポート
-- 日付や数値のフォーマット：言語に応じた日付や数値のフォーマット
-- キャッシュ機能：パフォーマンス向上のための翻訳キャッシュ
-- 翻訳の自動検出：不足している翻訳キーを検出するツール
-- 言語ごとのフォント切り替え：言語に応じたフォント設定
