@@ -20,6 +20,4 @@ import en from "./locales/en.json"; */
 initI18n({
   defaultLocale: defaultLocale,
   supportedLocales: ["ja", "en"],
-  // 遅延読み込みする場合のパターン（上記registerLocaleでファイルを指定した場合は不要）
-  loadPath: "/i18n/locales/{locale}.json",
 });
