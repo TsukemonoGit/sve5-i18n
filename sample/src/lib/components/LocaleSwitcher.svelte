@@ -1,6 +1,6 @@
 <!-- src/lib/i18n/LocaleSwitcher.svelte -->
 <script lang="ts">
-  import { setLocale, getLocale, locale } from "svelte5-i18n";
+  import { setLocale, locale } from "svelte5-i18n";
 
   // プロパティ定義
   interface Props {
@@ -16,7 +16,7 @@
   if (typeof window !== "undefined") {
     $effect(() => {
       // ロケール変更時の追加処理をここに記述できます
-      console.log(`Locale changed to: ${getLocale()}`);
+      console.log(`Locale changed to: ${$locale}`);
     });
   }
 </script>

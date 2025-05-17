@@ -2,9 +2,8 @@
 <script lang="ts">
   import Trans from "$lib/components/Trans.svelte";
   import { t } from "svelte5-i18n";
-
   import { translate } from "svelte5-i18n";
-  console.log("typeof t:", typeof t);
+
   let name = $state("ユーザー");
 
   // 名前変更ハンドラー
