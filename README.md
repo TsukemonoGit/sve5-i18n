@@ -1,3 +1,8 @@
+# Install
+```
+npm i @konemono/svelte5-i18n
+```
+
 # 使い方の説明
 
 ## svelte5 の i18n
