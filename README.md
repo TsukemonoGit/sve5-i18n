@@ -1,3 +1,8 @@
+# Install
+```
+npm i @konemono/svelte5-i18n
+```
+
 # 使い方の説明
 
 ## svelte5 の i18n
@@ -9,7 +14,7 @@
 ```typescript
 // src/lib/i18n/index.ts
 
-import { initI18n, setTranslations } from "@konemono/svelte5-i18n";
+import { initI18n, registerLocale } from "@konemono/svelte5-i18n";
 
 const defaultLocale = "en";
 
@@ -364,3 +369,72 @@ setTitle("common.title");
 - **SSR サポート**：サーバーサイドレンダリングに対応しています
 
 ---
+
+
+# @konemono/svelte5-i18n のVSCode設定
+
+## VSCode i18n-ally拡張機能の設定
+
+VSCodeで[i18n-ally拡張機能](https://marketplace.visualstudio.com/items?itemName=lokalise.i18n-ally)を使用すると、翻訳キーの自動補完や翻訳の管理が便利になります。
+
+### 1. 拡張機能のインストール
+
+VSCodeで「i18n Ally」を検索してインストールしてください。
+
+### 2. VSCode設定ファイル（.vscode/settings.json）
+
+プロジェクトルートに`.vscode/settings.json`を作成し、以下の設定を追加：
+
+```json
+{
+  "i18n-ally.localesPaths": ["src/lib/i18n/locales"],
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.enabledFrameworks": ["svelte"],
+  "i18n-ally.namespace": false,
+  "i18n-ally.usage.scanningIgnore": [
+    "node_modules/**", 
+    "dist/**", 
+    ".svelte-kit/**"
+  ],
+  "i18n-ally.regex.usageMatchAppend": [
+    "\\$t\\s*\\(['\"`]({key})['\"`].*?\\)",
+    "t\\s*\\(['\"`]({key})['\"`].*?\\)"
+  ]
+}
+```
+
+### 3. 設定の説明
+
+- **localesPaths**: 翻訳ファイルの場所を指定
+- **keystyle**: ネストしたキー形式（`common.hello`など）に対応
+- **enabledFrameworks**: Svelteプロジェクトであることを認識
+- **namespace**: 名前空間機能を無効化
+- **scanningIgnore**: スキャン対象外のディレクトリを指定
+- **usageMatchAppend**: `$t()`と`t()`の両方のパターンを認識
+
+### 4. 使用例
+
+設定後、以下のような機能が使えるようになります：
+
+```svelte
+<script>
+  import { t } from '@konemono/svelte5-i18n';
+</script>
+
+<!-- キーの自動補完 -->
+<h1>{$t('common.hello')}</h1>
+<p>{$t('messages.welcome')}</p>
+
+<!-- ホバーで翻訳内容を確認 -->
+<button>{$t('actions.submit')}</button>
+```
+
+### 5. 便利な機能
+
+- **自動補完**: 翻訳キーの入力時に候補が表示
+- **ホバー表示**: キーにマウスを置くと翻訳内容が表示
+- **未使用キー検出**: 使われていない翻訳キーをハイライト
+- **不足翻訳検出**: 特定の言語で不足している翻訳をマーク
+- **インライン編集**: エディタ上で直接翻訳を編集可能
+
+これらの設定により、@konemono/svelte5-i18nでの開発がより効率的になります。
