@@ -209,9 +209,9 @@ export async function initI18n(options: I18nOptions = {}): Promise<void> {
     _locale.set(initialLocale as string);
 
     // 言語設定をローカルストレージに保存
-    if (initialLocale) {
-      localStorage.setItem("preferred-locale", initialLocale);
-    }
+    // if (initialLocale) {
+    //   localStorage.setItem("preferred-locale", initialLocale);
+    // }
 
     // 初期言語の翻訳データを自動的に読み込む
     if (initialLocale) {

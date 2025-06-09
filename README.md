@@ -213,11 +213,39 @@ setTitle("common.title");
 
   - ブラウザの言語や localStorage から初期ロケールを決定します。
 
-- **setLocale(newLocale: string): void**  
-  ロケール（言語）を手動で切り替えます。
+- **registerLocale(locale: string, translationsOrLoader?: TranslationRecord | () => Promise<{ default: TranslationRecord }>): void**  
+  新しい言語を登録します。
+
+  - 直接翻訳データを渡すか、遅延ロード用の関数を渡せます。
+  - 何も渡さない場合は `loadPath` から自動取得するローダーを登録します。
 
   ```typescript
-  export function setLocale(newLocale: string): void;
+  export function registerLocale(
+    locale: string,
+    translationsOrLoader?:
+      | TranslationRecord
+      | (() => Promise<{ default: TranslationRecord }>)
+  ): void;
+  ```
+
+  - 例:
+
+    ```typescript
+    // 直接データを登録
+    registerLocale("fr", { hello: "Bonjour" });
+
+    // 遅延ロード関数を登録
+    registerLocale("de", () => import("./locales/de.json"));
+
+    // loadPathから自動取得
+    registerLocale("es");
+    ```
+
+- **setLocale(newLocale: string): Promise<void>**  
+  ロケール（言語）を手動で切り替えます。必要に応じて翻訳データも自動ロードします。
+
+  ```typescript
+  export async function setLocale(newLocale: string): Promise<void>;
   ```
 
 - **setTranslations(newTranslations: Translations): void**  
@@ -241,7 +269,7 @@ setTitle("common.title");
   現在のロケール・翻訳データに基づき、翻訳関数を返す Svelte の derived ストアです。
   ```typescript
   export const t: Readable<
-    (key: string, params?: Record<string, string>) => string
+    (key: string, params?: Record<string, string | number>) => string
   >;
   ```
   - 使い方例: `{$t("greeting.hello", { name: "ユーザー" })}`
@@ -256,14 +284,17 @@ setTitle("common.title");
   ```typescript
   export function translate(
     node: HTMLElement,
-    options: { key: string; params?: Record<string, string> }
+    options: { key: string; params?: Record<string, string | number> }
   ): {
-    update(newOptions: { key: string; params?: Record<string, string> }): void;
+    update(newOptions: {
+      key: string;
+      params?: Record<string, string | number>;
+    }): void;
     destroy(): void;
   };
   ```
   - `node.textContent` に翻訳結果を自動でセットします。
-  - `locale` が変わるたびに自動で再翻訳されます。
+  - `locale` や `translations` が変わるたびに自動で再翻訳されます。
   - `update` で翻訳キーやパラメータを動的に変更できます。
   - `destroy` で購読解除します。
   - 例:
@@ -275,12 +306,23 @@ setTitle("common.title");
 
 ### その他
 
-- **setTitle(key: string, params?: Record<string, string>): void**  
+- **setTitle(key: string, params?: Record<string, string | number>): void**  
   ドキュメントタイトルを翻訳して自動更新します（クライアントのみ）。
+
   ```typescript
-  export const setTitle: (key: string, params?: Record<string, string>) => void;
+  export const setTitle: (
+    key: string,
+    params?: Record<string, string | number>
+  ) => void;
   ```
+
   - 言語切り替え時も自動でタイトルが更新されます。
+
+- **getCurrentTranslations(): TranslationRecord | undefined**  
+  現在のロケールの翻訳データを取得します。
+  ```typescript
+  export function getCurrentTranslations(): TranslationRecord | undefined;
+  ```
 
 ---
 
