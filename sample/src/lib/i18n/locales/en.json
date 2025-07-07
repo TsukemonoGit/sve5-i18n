@@ -13,5 +13,6 @@
     "items": { "items": "Number of items" },
     "status": "Status",
     "lastUpdate": "Last update"
-  }
+  },
+  "noja": "only english"
 }
