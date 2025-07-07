@@ -2,12 +2,12 @@
 <script lang="ts">
   import { t } from "svelte5-i18n";
 
-  // プロパティ定義
   interface Props {
     key: string;
+    fallbackKey?: string; // 追加
     params?: Record<string, string>;
   }
-  let { key = "", params = {} }: Props = $props();
+  let { key = "", fallbackKey = undefined, params = {} }: Props = $props();
 </script>
 
-{$t(key, params)}
+{$t(key, fallbackKey, params)}

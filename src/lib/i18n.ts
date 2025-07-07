@@ -1,6 +1,6 @@
 // src/lib/i18n.ts
 import { onMount } from "svelte";
-import { derived, get, writable } from "svelte/store";
+import { derived, get, Readable, writable } from "svelte/store";
 
 // タイプ定義
 type TranslationRecord = {
@@ -17,8 +17,14 @@ const _locale = writable<LocaleCode>("en");
 export const locale = derived(_locale, ($locale) => $locale);
 export const translations = writable<Translations>({});
 
+type TFunction = (
+  key: string,
+  fallbackOrParams?: string | Record<string, string | number>,
+  maybeParams?: Record<string, string | number>
+) => string;
+
 // 初期設定用のオプション
-interface I18nOptions {
+export interface I18nOptions {
   defaultLocale?: LocaleCode;
   supportedLocales?: LocaleCode[];
   loadPath?: string;
@@ -41,8 +47,12 @@ const defaultOptions: I18nOptions = {
 let globalI18nOptions: I18nOptions = defaultOptions;
 
 // オプションをグローバルに保存
-function setI18nOptions(options: I18nOptions): void {
-  globalI18nOptions = { ...globalI18nOptions, ...options };
+export function setI18nOptions(options: Partial<I18nOptions>): void {
+  globalI18nOptions = {
+    ...defaultOptions, // まずデフォルト値を敷く
+    ...globalI18nOptions, // その上にこれまでの設定を上書き
+    ...options, // 最後に今回の設定で上書き
+  };
 }
 
 // グローバルオプションを取得
@@ -229,46 +239,42 @@ export async function initI18n(options: I18nOptions = {}): Promise<void> {
     _locale.set(opts.defaultLocale as string);
   }
 }
-
-// 翻訳を取得する基本関数
-function getTranslate(
+// 基本の翻訳取得関数
+export function getTranslate(
   locale: string,
   translations: Translations,
   key: string,
   params?: Record<string, string | number>
 ): string {
-  const localeTranslations = translations[locale] || {};
+  const localeTranslations = translations[locale] ?? {};
 
-  // キーを分解して階層的に取得
   const keys = key.split(".");
-  let result: any = localeTranslations;
+  let result: unknown = localeTranslations;
 
   for (const k of keys) {
-    if (result && typeof result === "object" && k in result) {
-      result = result[k];
+    if (result && typeof result === "object" && k in (result as object)) {
+      result = (result as Record<string, unknown>)[k];
     } else {
-      // キーが見つからない場合はキーをそのまま返す
-      return key;
+      return key; // キー未発見時は元キー返却
     }
   }
 
-  // 文字列でない場合はキーをそのまま返す
   if (typeof result !== "string") {
     return key;
   }
 
-  // パラメータの置換
-  if (params) {
-    return Object.entries(params).reduce((str, [paramKey, paramValue]) => {
-      return str.replace(new RegExp(`{${paramKey}}`, "g"), String(paramValue));
-    }, result);
-  }
+  if (!params) return result;
 
-  return result;
+  // params置換
+  return Object.entries(params).reduce(
+    (str, [paramKey, paramValue]) =>
+      str.replace(new RegExp(`{${paramKey}}`, "g"), String(paramValue)),
+    result
+  );
 }
 
-// フォールバック対応の翻訳取得関数
-function getTranslateWithFallback(
+// フォールバック対応翻訳取得
+export function getTranslateWithFallback(
   locale: string,
   translations: Translations,
   key: string,
@@ -276,25 +282,26 @@ function getTranslateWithFallback(
 ): string {
   const options = getI18nOptions();
 
-  // まず現在の言語で翻訳を試みる
-  const result = getTranslate(locale, translations, key, params);
+  // メイン言語で翻訳取得
+  const mainResult = getTranslate(locale, translations, key, params);
+  if (mainResult !== key) return mainResult;
 
-  // キーがそのまま返された場合（＝翻訳が見つからなかった場合）
-  if (
-    result === key &&
-    options.fallbackLocale &&
-    locale !== options.fallbackLocale
-  ) {
-    // フォールバック言語で翻訳を試みる
-    return getTranslate(options.fallbackLocale, translations, key, params);
+  // フォールバック言語で再取得（存在するかつメインと違う場合のみ）
+  if (options.fallbackLocale && locale !== options.fallbackLocale) {
+    const fallbackResult = getTranslate(
+      options.fallbackLocale,
+      translations,
+      key,
+      params
+    );
+    if (fallbackResult !== key) return fallbackResult;
   }
 
-  // 見つかった翻訳、またはフォールバックも失敗した場合はキーをそのまま返す
-  return result;
+  return key;
 }
 
-// デバッグ情報付きフォールバック関数
-function getTranslateWithFallbackDebug(
+// デバッグ付き翻訳取得（必要に応じて利用）
+export function getTranslateWithFallbackDebug(
   locale: string,
   translations: Translations,
   key: string,
@@ -302,21 +309,16 @@ function getTranslateWithFallbackDebug(
 ): string {
   const options = getI18nOptions();
 
-  // まず現在の言語で翻訳を試みる
   const result = getTranslate(locale, translations, key, params);
-
-  // デバッグモードがオンで翻訳が見つからなかった場合
   if (options.debug && options.missingTranslationWarnings && result === key) {
     console.warn(`[i18n] Missing translation: ${locale}.${key}`);
   }
 
-  // キーがそのまま返された場合（＝翻訳が見つからなかった場合）
   if (
     result === key &&
     options.fallbackLocale &&
     locale !== options.fallbackLocale
   ) {
-    // フォールバック言語で翻訳を試みる
     const fallbackResult = getTranslate(
       options.fallbackLocale,
       translations,
@@ -333,30 +335,87 @@ function getTranslateWithFallbackDebug(
         `[i18n] Using fallback: ${options.fallbackLocale}.${key} for ${locale}.${key}`
       );
     }
-
     return fallbackResult;
   }
 
   return result;
 }
 
-// フォールバック対応の翻訳関数
-export const t = derived(
-  [locale, translations],
-  ([$locale, $translations]) =>
-    (key: string, params?: Record<string, string | number>) => {
-      const options = getI18nOptions();
-      if (options.debug && options.missingTranslationWarnings) {
-        return getTranslateWithFallbackDebug(
-          $locale,
-          $translations,
-          key,
-          params
-        );
-      } else {
-        return getTranslateWithFallback($locale, $translations, key, params);
-      }
+function resolveTranslation(
+  key: string,
+  fallbackKey: string | undefined,
+  locale: string,
+  translations: Record<string, any>,
+  fallbackLocale: string | undefined,
+  params?: Record<string, string | number>
+): string {
+  let result = getTranslateWithFallback(locale, translations, key, params);
+
+  if (result === key && fallbackKey) {
+    const fallbackResult = getTranslateWithFallback(
+      locale,
+      translations,
+      fallbackKey,
+      params
+    );
+    if (fallbackResult !== fallbackKey && fallbackResult !== key) {
+      result = fallbackResult;
     }
+  }
+
+  if (result === key && fallbackLocale && locale !== fallbackLocale) {
+    let fallbackResult = getTranslateWithFallback(
+      fallbackLocale,
+      translations,
+      key,
+      params
+    );
+
+    if (
+      (fallbackResult === key || fallbackResult === fallbackKey) &&
+      fallbackKey
+    ) {
+      fallbackResult = getTranslateWithFallback(
+        fallbackLocale,
+        translations,
+        fallbackKey,
+        params
+      );
+    }
+
+    if (fallbackResult !== key && fallbackResult !== fallbackKey) {
+      return fallbackResult;
+    }
+  }
+
+  return result === key || result === fallbackKey ? key : result;
+}
+
+// Svelteストア derived の翻訳関数
+export const t: Readable<TFunction> = derived(
+  [locale, translations],
+  ([$locale, $translations]) => {
+    const options = getI18nOptions();
+
+    return (
+      key: string,
+      fallbackOrParams?: string | Record<string, string | number>,
+      maybeParams?: Record<string, string | number>
+    ): string => {
+      const hasFallback = typeof fallbackOrParams === "string";
+      const fallbackKey = hasFallback ? fallbackOrParams : undefined;
+      const params = hasFallback ? maybeParams : fallbackOrParams;
+
+      return resolveTranslation(
+        key,
+        fallbackKey,
+        $locale,
+        $translations,
+        options.fallbackLocale,
+        params
+      );
+    };
+  }
 );
 
 // setLocale関数も更新して動的ローディングに対応
@@ -414,18 +473,27 @@ export function getCurrentTranslations(): TranslationRecord | undefined {
 // Svelte 5用の翻訳ディレクティブ
 export function translate(
   node: HTMLElement,
-  options: { key: string; params?: Record<string, string | number> }
+  options: {
+    key: string;
+    fallbackKey?: string;
+    params?: Record<string, string | number>;
+  }
 ) {
   const updateText = () => {
     const currentLocale = get(locale);
     const allTranslations = get(translations);
+    const fallbackLocale = getI18nOptions().fallbackLocale;
 
-    node.textContent = getTranslateWithFallback(
+    const result = resolveTranslation(
+      options.key,
+      options.fallbackKey,
       currentLocale,
       allTranslations,
-      options.key,
+      fallbackLocale,
       options.params
     );
+
+    node.textContent = result;
   };
 
   // 初期テキスト設定
@@ -438,6 +506,7 @@ export function translate(
   return {
     update(newOptions: {
       key: string;
+      fallbackKey?: string;
       params?: Record<string, string | number>;
     }) {
       options = newOptions;

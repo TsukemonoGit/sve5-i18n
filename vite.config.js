@@ -1,24 +1,28 @@
-import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { resolve } from 'path';
-
+import { defineConfig } from "vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { resolve } from "path";
 
 export default defineConfig({
   plugins: [svelte()],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(__dirname, "src/index.ts"),
       //name: 'svelte5I18n',
-      fileName: () =>  'index.js', //`svelte5-i18n.${format}.js`
-       formats: ['es'] 
+      fileName: () => "index.js", //`svelte5-i18n.${format}.js`
+      formats: ["es"],
     },
     rollupOptions: {
-      external: ['svelte'],
+      external: ["svelte"],
       output: {
         globals: {
-          svelte: 'svelte'
-        }
-      }
-    }
-  }
+          svelte: "svelte",
+        },
+      },
+    },
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    include: ["tests/**/*.test.ts"], // ここを変更してもOK
+  },
 });
