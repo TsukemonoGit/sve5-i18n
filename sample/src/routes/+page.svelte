@@ -81,5 +81,43 @@
 </div>
 
 <style>
-  /* ...省略（元のまま） */
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .welcome-section {
+    margin: 2rem 0;
+  }
+  input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+  }
+  .menu-section {
+    margin: 2rem 0;
+  }
+  .button-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .action-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f8f9fa;
+    cursor: pointer;
+  }
+  .action-button.primary {
+    background: #4299e1;
+    color: white;
+    border-color: #3182ce;
+  }
+  .info-section {
+    margin: 2rem 0;
+    padding: 1rem;
+    background: #f0f4f8;
+    border-radius: 4px;
+  }
 </style>
