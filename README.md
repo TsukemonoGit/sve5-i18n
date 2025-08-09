@@ -243,7 +243,10 @@ import type { LayoutLoad } from "./$types";
 
 export const load: LayoutLoad = async () => {
   if (browser) {
-    setLocale(window.navigator.language);
+    const browserLang = window.navigator.language.split("-")[0]; // ja-JP -> ja
+    const supportedLocales = ["en", "ja"];
+    const locale = supportedLocales.includes(browserLang) ? browserLang : "en";
+    setLocale(locale);
   }
   await waitLocale();
 };
