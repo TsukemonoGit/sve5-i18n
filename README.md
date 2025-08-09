@@ -209,6 +209,48 @@ import { setTitle } from "$lib/i18n/directives";
 setTitle("common.title");
 ```
 
+---
+
+## 7. SSR 対応の基本設定
+
+サーバーサイドレンダリング（SSR）環境で i18n を使用する場合の基本設定：
+
+### hooks.server.ts での言語検出
+
+```typescript
+// hooks.server.ts
+import { setLocale } from "@konemono/svelte5-i18n";
+import type { Handle } from "@sveltejs/kit";
+
+export const handle: Handle = async ({ event, resolve }) => {
+  const lang = event.request.headers.get("accept-language")?.split(",")[0];
+  if (lang) {
+    setLocale(lang);
+  }
+  return resolve(event);
+};
+```
+
+### レイアウトでの初期化
+
+```typescript
+// +layout.ts
+import { browser } from "$app/environment";
+import "$lib/i18n"; // Import to initialize. Important :)
+import { setLocale, waitLocale } from "@konemono/svelte5-i18n";
+
+import type { LayoutLoad } from "./$types";
+
+export const load: LayoutLoad = async () => {
+  if (browser) {
+    setLocale(window.navigator.language);
+  }
+  await waitLocale();
+};
+```
+
+この設定により、サーバーサイドでは Accept-Language ヘッダーから、クライアントサイドではブラウザの言語設定から自動的に言語を検出し、翻訳データの読み込み完了を待機してからページを表示します。
+
 ## API リファレンス
 
 ### ストア
