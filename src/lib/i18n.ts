@@ -538,3 +538,24 @@ export const setTitle = (
     return unsubscribe;
   });
 };
+
+export function waitLocale(): Promise<void> {
+  return new Promise((resolve) => {
+    const currentLocale = get(locale);
+    const allTranslations = get(translations);
+
+    // すでに翻訳がロード済みなら即解決
+    if (allTranslations[currentLocale]) {
+      resolve();
+      return;
+    }
+
+    // ロード待ちのために購読開始
+    const unsubscribe = translations.subscribe(($translations) => {
+      if ($translations[currentLocale]) {
+        unsubscribe();
+        resolve();
+      }
+    });
+  });
+}
