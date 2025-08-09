@@ -540,7 +540,7 @@ export const setTitle = (
 };
 
 export function waitLocale(): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const currentLocale = get(locale);
     const allTranslations = get(translations);
 
@@ -550,9 +550,27 @@ export function waitLocale(): Promise<void> {
       return;
     }
 
+    // タイムアウト設定（10秒）
+    const timeoutId = setTimeout(() => {
+      unsubscribe();
+      reject(
+        new Error(
+          `翻訳データの読み込みがタイムアウトしました: ${currentLocale}`
+        )
+      );
+    }, 10000);
+
+    // 翻訳データの読み込みを試行
+    loadLocale(currentLocale).catch((error) => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+      reject(error);
+    });
+
     // ロード待ちのために購読開始
     const unsubscribe = translations.subscribe(($translations) => {
       if ($translations[currentLocale]) {
+        clearTimeout(timeoutId);
         unsubscribe();
         resolve();
       }
