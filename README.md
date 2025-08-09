@@ -215,6 +215,27 @@ setTitle("common.title");
 
 サーバーサイドレンダリング（SSR）環境で i18n を使用し、OGP メタデータにも翻訳を適用できます：
 
+### 型定義の拡張
+
+まず、`src/app.d.ts`で`Locals`型を拡張します：
+
+```typescript
+// src/app.d.ts
+declare global {
+  namespace App {
+    interface Locals {
+      locale: string;
+    }
+    // interface Error {}
+    // interface PageData {}
+    // interface PageState {}
+    // interface Platform {}
+  }
+}
+
+export {};
+```
+
 ### hooks.server.ts での言語検出
 
 ```typescript
@@ -226,7 +247,7 @@ function getPreferredLocale(
   acceptLanguage: string | null,
   supportedLocales: string[]
 ): string {
-  if (!acceptLanguage) return "ja";
+  if (!acceptLanguage) return "en";
 
   const languages = acceptLanguage
     .split(",")
@@ -238,7 +259,7 @@ function getPreferredLocale(
       return lang;
     }
   }
-  return "ja";
+  return "en";
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -246,7 +267,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   const acceptLanguage = event.request.headers.get("accept-language");
   const preferredLocale = getPreferredLocale(
     acceptLanguage,
-    options.supportedLocales || ["ja", "en"]
+    options.supportedLocales || ["en", "ja"]
   );
 
   await setLocale(preferredLocale);
@@ -259,27 +280,42 @@ export const handle: Handle = async ({ event, resolve }) => {
 ### レイアウトでの初期化
 
 ```typescript
+// src/routes/+layout.server.ts
+import type { LayoutServerLoad } from "./$types";
+
+export const load: LayoutServerLoad = async ({ locals }) => {
+  return {
+    locale: locals.locale || "en",
+  };
+};
+```
+
+```typescript
 // src/routes/+layout.ts
 import "$lib/i18n/index.ts";
 import { browser } from "$app/environment";
 import type { LayoutLoad } from "./$types";
 import { setLocale, waitLocale } from "@konemono/svelte5-i18n";
 
-export const load: LayoutLoad = async () => {
+export const load: LayoutLoad = async ({ data }) => {
+  // サーバーサイドで検出された言語を優先
+  const serverLocale = data.locale;
+
   if (browser) {
+    // クライアントサイドでは、まずサーバーの言語設定を使用
+    await setLocale(serverLocale);
+
+    // その後、保存された設定があれば適用
     const savedLocale = localStorage.getItem("preferred-locale");
-    const browserLocale = navigator.language.split("-")[0];
-    const supportedLocales = ["ja", "en"];
-
-    const clientLocale =
-      savedLocale ||
-      (supportedLocales.includes(browserLocale) ? browserLocale : "ja");
-
-    await setLocale(clientLocale);
+    if (savedLocale && savedLocale !== serverLocale) {
+      await setLocale(savedLocale);
+    }
+  } else {
+    // サーバーサイドでは既に設定済みなので再設定不要
   }
 
   await waitLocale();
-  return {};
+  return { locale: serverLocale };
 };
 ```
 
@@ -288,28 +324,33 @@ export const load: LayoutLoad = async () => {
 ```typescript
 // src/routes/+page.server.ts
 import type { PageServerLoad } from "./$types";
-import {
-  getTranslateWithFallback,
-  getCurrentTranslations,
-} from "@konemono/svelte5-i18n";
+import { getCurrentTranslations, get } from "@konemono/svelte5-i18n";
+import { locale, translations } from "@konemono/svelte5-i18n";
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const locale = locals.locale || "ja";
-  const translations = getCurrentTranslations();
+  const currentLocale = locals.locale || "en";
 
-  const title = getTranslateWithFallback(
-    locale,
-    { [locale]: translations },
-    "meta.title"
-  );
-  const description = getTranslateWithFallback(
-    locale,
-    { [locale]: translations },
-    "meta.description"
-  );
+  // サーバーサイドで現在のロケールの翻訳データを取得
+  const allTranslations = get(translations);
+  const currentTranslations = allTranslations[currentLocale];
+
+  // 翻訳データから直接値を取得
+  const getNestedValue = (obj: any, key: string) => {
+    return key.split(".").reduce((curr, k) => curr?.[k], obj);
+  };
+
+  const title =
+    getNestedValue(currentTranslations, "meta.title") || "Default Title";
+  const description =
+    getNestedValue(currentTranslations, "meta.description") ||
+    "Default Description";
 
   return {
-    meta: { title, description, locale },
+    meta: {
+      title,
+      description,
+      locale: currentLocale,
+    },
   };
 };
 ```
