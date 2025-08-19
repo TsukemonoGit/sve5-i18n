@@ -422,21 +422,23 @@ export const t: Readable<TFunction> = derived(
 export async function setLocale(newLocale: string): Promise<void> {
   const options = getI18nOptions();
 
-  // サポートされた言語かチェック
+  let targetLocale = newLocale;
+
+  // サポートされていない言語はデフォルトにフォールバック
   if (!options.supportedLocales?.includes(newLocale)) {
     if (options.debug) {
-      console.warn(`[i18n] サポートされていない言語です: ${newLocale}`);
+      console.warn(
+        `[i18n] サポートされていない言語です: ${newLocale}, デフォルトにフォールバックします: ${options.defaultLocale}`
+      );
     }
-    return;
+    targetLocale = options.defaultLocale as string;
   }
 
-  // 既存の翻訳データを取得
   const currentTranslations = get(translations);
 
-  // 該当言語の翻訳データがまだ読み込まれていない場合は読み込む
-  if (!currentTranslations[newLocale]) {
+  if (!currentTranslations[targetLocale]) {
     try {
-      await loadLocale(newLocale);
+      await loadLocale(targetLocale);
     } catch (error) {
       if (options.debug) {
         console.error(`[i18n] 言語データの読み込みに失敗しました:`, error);
@@ -445,16 +447,14 @@ export async function setLocale(newLocale: string): Promise<void> {
     }
   }
 
-  // 言語を切り替え
-  _locale.set(newLocale);
+  _locale.set(targetLocale);
 
-  // 設定をローカルストレージに保存
   if (typeof localStorage !== "undefined") {
-    localStorage.setItem("preferred-locale", newLocale);
+    localStorage.setItem("preferred-locale", targetLocale);
   }
 
   if (options.debug) {
-    console.log(`[i18n] 言語を変更しました: ${newLocale}`);
+    console.log(`[i18n] 言語を変更しました: ${targetLocale}`);
   }
 }
 
